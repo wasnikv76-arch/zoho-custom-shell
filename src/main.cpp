@@ -232,6 +232,45 @@ void cmd_exit(const vector<string>& args) {
     cout << "See you soon.....!\n";
 }
 
+
+vector<string> tokenize(string input) {
+
+    vector<string> tokens;
+    string current;
+
+    bool insideQuotes = false;
+
+    for (char ch : input) {
+
+        if (ch == '"') {
+            insideQuotes = !insideQuotes;
+        }
+
+        else if (ch == ' ' && !insideQuotes) {
+
+            if (!current.empty()) {
+                tokens.push_back(current);
+                current.clear();
+            }
+        }
+
+        else {
+            current += ch;
+        }
+    }
+    
+    if (insideQuotes) {
+        cout << "vShell: syntax error: missing closing quote\n";
+        return {};
+    }
+
+    if (!current.empty()) {
+        tokens.push_back(current);
+    }
+
+    return tokens;
+}
+
 int main() {
 
     using Command = function<void(const vector<string>&)>;
@@ -259,22 +298,16 @@ int main() {
         cout << "vShell> ";
         getline(cin, input);
 
-        // Convert our string into a stream
-        stringstream ss(input);
+        vector<string> tokens = tokenize(input);
 
-        // First word = command
-        string command;
-        ss >> command;
-
-        // Remaining words = arguments
-        vector<string> args;
-
-        string arg;
-
-        while (ss >> arg) {
-            args.push_back(arg);
+        if (tokens.empty()) {
+            continue;
         }
+        // First token = command
+        string command = tokens[0];
 
+        // Remaining tokens = arguments
+        vector<string> args(tokens.begin() + 1, tokens.end());
 
         // Empty input
         if (command.empty()) {
